@@ -45,7 +45,7 @@ export default function LeadForm({ snap, boost, onClose, onCall, onOpen }: {
         <div className="modal-head">
           <div>
             <h2>{leadId ? "Your lead is moving" : "Book a visit at DEMO Dental"}</h2>
-            <p className="muted">{leadId ? "Live from n8n. No one at the clinic touched this." : "This is the clinic’s website form. Use any name; a real email or phone is not needed."}</p>
+            <p className="muted">{leadId ? "Live from n8n. No one at the clinic touched this." : "This is the clinic’s website form. Please use made-up details: this test space is shared, so other visitors can see the leads."}</p>
           </div>
           <button className="icon-btn" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </div>
