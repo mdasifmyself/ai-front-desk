@@ -1,0 +1,34 @@
+{
+  "name": "DEMO Dental Clinic",
+  "assistant": "Ava",
+  "timezone": "Asia/Dhaka",
+  "address": "1200 Market Street, Suite 210 (free parking behind the building, wheelchair access)",
+  "phone": "(555) 010-2040",
+  "hours_text": "Monday to Friday 9:00 AM to 6:00 PM (closed 1 to 2 PM for lunch), Saturday 9:00 AM to 2:00 PM, Sunday closed",
+  "open": {"1": [9, 18], "2": [9, 18], "3": [9, 18], "4": [9, 18], "5": [9, 18], "6": [9, 14]},
+  "lunch": [13, 14],
+  "slot_minutes": 30,
+  "services": [
+    {"name": "Check-up & cleaning", "price": "from $85; new patients $99 for exam, X-rays and cleaning"},
+    {"name": "Teeth whitening", "price": "in-office whitening from $299"},
+    {"name": "Tooth pain / emergency", "price": "$79 emergency exam; same-day slots kept free"},
+    {"name": "Fillings", "price": "from $120 per tooth"},
+    {"name": "Root canal", "price": "from $650, confirmed after an exam"},
+    {"name": "Crowns", "price": "from $900 per crown"},
+    {"name": "Dental implants", "price": "free consultation; implants from $2,400"},
+    {"name": "Clear aligners", "price": "free consultation; treatment from $3,200"},
+    {"name": "Kids' dentistry", "price": "children's check-up from $65"}
+  ],
+  "dentists": [
+    "Dr. Emily Carter: general and cosmetic dentistry, whitening",
+    "Dr. James Patel: implants, crowns and root canals",
+    "Dr. Sofia Nguyen: children's dentistry"
+  ],
+  "insurance": "Most PPO plans, including Delta Dental, Cigna, Aetna, MetLife and Guardian. Not accepted: HMO plans and Medicaid. No insurance: 0% payment plans over 12 months for treatment above $500.",
+  "policies": [
+    "Please give 24 hours' notice to cancel or move a visit.",
+    "Arrive 10 minutes early and bring a photo ID and your insurance card.",
+    "Languages spoken: English and Spanish."
+  ],
+  "emergency_rule": "Severe facial swelling, trouble breathing or swallowing, heavy bleeding that will not stop, or a jaw injury: tell the caller to call 911 or go to the nearest emergency room now. Toothache, a broken tooth or a lost filling: offer the earliest emergency slot."
+}
