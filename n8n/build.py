@@ -1,11 +1,11 @@
-"""Builds and deploys the DEMO Dental n8n workflows (create or update by name, then activate).
+"""Builds and deploys the Front Desk n8n workflows (create or update by name, then activate).
 
   python3 n8n/build.py
 
 Rules:
 - The original "Leave Policy Assistant" workflows are only READ. Workflow 04 (chat agent) starts as a
   complete copy of the Answer Engine, saved under a new name and a new webhook path, then customised.
-- All secrets live in ~/.config/crm-voice-demo (never printed, never in the web code).
+- All secrets live in ~/.config/asif-demos (never printed, never in the web code).
 """
 import json, pathlib, secrets, uuid
 from common import api, ids, save_ids, CFG, OPENAI_CRED, MODEL, PREFIX, ROOT
@@ -30,7 +30,7 @@ def webhook_cred():
     secret = secrets.token_urlsafe(32)
     (CFG / "webhook_secret").write_text(secret)
     (CFG / "webhook_secret").chmod(0o600)
-    c = api("POST", "/credentials", {"name": "DEMO Dental | webhook key", "type": "httpHeaderAuth",
+    c = api("POST", "/credentials", {"name": "Front Desk | webhook key", "type": "httpHeaderAuth",
                                      "data": {"name": "X-Demo-Key", "value": secret}})
     I["cred_webhook"] = {"id": c["id"], "name": c["name"]}
     save_ids(I)
@@ -42,7 +42,7 @@ def hubspot_cred():
         return None
     if "cred_hubspot" in I:
         return I["cred_hubspot"]
-    c = api("POST", "/credentials", {"name": "DEMO Dental | HubSpot", "type": "httpHeaderAuth",
+    c = api("POST", "/credentials", {"name": "Front Desk | HubSpot", "type": "httpHeaderAuth",
                                      "data": {"name": "Authorization", "value": "Bearer " + HUBSPOT_TOKEN}})
     I["cred_hubspot"] = {"id": c["id"], "name": c["name"]}
     save_ids(I)
@@ -85,7 +85,7 @@ def if_true(name, expr, pos):
 
 
 def table(short):
-    return {"__rl": True, "mode": "id", "value": I[f"table_{short}"], "cachedResultName": f"DEMO Dental {short}"}
+    return {"__rl": True, "mode": "id", "value": I[f"table_{short}"], "cachedResultName": f"Front Desk {short}"}
 
 
 def dt_get(name, short, pos, key=None, value=None):
@@ -255,16 +255,16 @@ def wf_errors():
          code("Write alert", js(r"""
 const e = $input.first().json;
 return [{ json: { lead_id: '', at: new Date().toISOString(), kind: 'error',
-  title: `Workflow error: ${(e.workflow && e.workflow.name || '').replace('DEMO Dental | ', '')}`,
+  title: `Workflow error: ${(e.workflow && e.workflow.name || '').replace('Front Desk | ', '')}`,
   detail: String((e.execution && e.execution.error && e.execution.error.message) || 'Unknown error').slice(0, 300),
   channel: 'system', sample: false } }];
 """), (240, 0)),
          dt_insert("Log alert", "activity", (480, 0)),
-         note("## Error alerts\nAny DEMO Dental workflow that crashes lands here. The error is written to the activity log, "
+         note("## Error alerts\nAny Front Desk workflow that crashes lands here. The error is written to the activity log, "
               "so it shows on the console's Automations screen. In production this also sends a Telegram/Slack alert.", (0, -260), 520, 200)]
     c = {}
     chain(c, "Error Trigger", "Write alert", "Log alert")
-    deploy("wf_errors", "08 Error Alerts", n, c, activate=False)
+    deploy("wf_errors", "08 Error Alerts", n, c)   # n8n 2.x: an error workflow must be published before others can select it
 
 
 # =====================================================================================
@@ -718,7 +718,7 @@ def copy_answer_engine():
     I["wf_chat"] = api("POST", "/workflows", {"name": PREFIX + "04 Patient Chat Agent", "nodes": nodes,
                                               "connections": orig["connections"], "settings": st})["id"]
     save_ids(I)
-    print("copied Answer Engine -> DEMO Dental | 04 Patient Chat Agent (inactive copy)")
+    print("copied Answer Engine -> Front Desk | 04 Patient Chat Agent (inactive copy)")
 
 
 def wf_chat():

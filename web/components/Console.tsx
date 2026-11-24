@@ -102,7 +102,7 @@ function Shell() {
   const brand = (
     <div className="brand">
       <span className="brand-mark"><Stethoscope size={18} /></span>
-      <div><div className="brand-name">AI Front Desk</div><span className="demo-pill">DEMO</span></div>
+      <div><div className="brand-name">AI Front Desk</div><span className="demo-pill">Sample</span></div>
     </div>
   );
 
@@ -112,7 +112,7 @@ function Shell() {
         <div className="rail-in">
           <div className="brand" title="AI Front Desk, demo">
             <span className="brand-mark"><Stethoscope size={22} /></span>
-            <span className="demo-pill">DEMO</span>
+            <span className="demo-pill">Sample</span>
           </div>
           <nav aria-label="Sections" style={{ display: "contents" }}>{nav("side")}</nav>
           <div className="rail-foot">

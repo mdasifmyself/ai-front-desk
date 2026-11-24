@@ -1,4 +1,4 @@
-"""Create the DEMO Dental data tables in n8n (once). Safe to re-run: existing tables are kept."""
+"""Create the Front Desk data tables in n8n (once). Safe to re-run: existing tables are kept."""
 from common import api, ids, save_ids
 
 S, N, B = "string", "number", "boolean"
@@ -21,7 +21,7 @@ TABLES = {
 d = ids()
 existing = {t["name"]: t["id"] for t in api("GET", "/data-tables?limit=100")["data"]}
 for short, cols in TABLES.items():
-    name = f"DEMO Dental {short}"
+    name = f"Front Desk {short}"
     if name in existing:
         d[f"table_{short}"] = existing[name]
         print("kept", name)

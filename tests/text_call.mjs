@@ -5,8 +5,8 @@ import fs from "node:fs";
 import os from "node:os";
 
 const home = os.homedir();
-const XI = fs.readFileSync(`${home}/.config/renata-assessment/elevenlabs_key`, "utf8").trim();
-const AGENT = JSON.parse(fs.readFileSync(`${home}/.config/crm-voice-demo/ids.json`, "utf8")).el_agent;
+const XI = fs.readFileSync(`${home}/.config/asif-demos/elevenlabs_key`, "utf8").trim();
+const AGENT = JSON.parse(fs.readFileSync(`${home}/.config/asif-demos/frontdesk/ids.json`, "utf8")).el_agent;
 const lines = process.argv.slice(2);
 const leadId = "L-TXT" + Date.now().toString(36).toUpperCase().slice(-4);
 
@@ -31,7 +31,7 @@ ws.onopen = () => ws.send(JSON.stringify({
   type: "conversation_initiation_client_data",
   conversation_config_override: { conversation: { text_only: true } },
   dynamic_variables: {
-    greeting: "Thanks for calling DEMO Dental Clinic, this is Ava, the clinic's AI assistant. How can I help you today?",
+    greeting: "Thanks for calling Lakeview Dental Clinic, this is Ava, the clinic's AI assistant. How can I help you today?",
     call_type: "inbound (they called the clinic)", now: `${f(now, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}, ${f(now, { hour: "numeric", minute: "2-digit", hour12: true })}`,
     lead_id: leadId, lead_name: "unknown", lead_service: "unknown", lead_note: "none", calendar,
   },

@@ -35,7 +35,7 @@ export default function InboxView({ boost }: { boost: (ms?: number) => void }) {
 }
 
 function Chat({ boost }: { boost: (ms?: number) => void }) {
-  const [msgs, setMsgs] = useState<Msg[]>([{ role: "assistant", content: "Hi! I’m Ava from DEMO Dental Clinic. Ask me anything, or book a visit right here." }]);
+  const [msgs, setMsgs] = useState<Msg[]>([{ role: "assistant", content: "Hi! I’m Ava from Lakeview Dental Clinic. Ask me anything, or book a visit right here." }]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const leadId = useRef("L-W" + Date.now().toString(36).toUpperCase().slice(-5));
@@ -60,7 +60,7 @@ function Chat({ boost }: { boost: (ms?: number) => void }) {
     <section className="card">
       <h2>WhatsApp chat <span className="muted">same AI, text channel</span></h2>
       <div className="phone">
-        <div className="phone-top"><span className="avatar">DD</span><div><b style={{ fontWeight: 500 }}>DEMO Dental Clinic</b><div style={{ fontSize: 12, opacity: 0.8 }}>{busy ? "typing…" : "AI assistant"}</div></div></div>
+        <div className="phone-top"><span className="avatar">LD</span><div><b style={{ fontWeight: 500 }}>Lakeview Dental Clinic</b><div style={{ fontSize: 12, opacity: 0.8 }}>{busy ? "typing…" : "AI assistant"}</div></div></div>
         <div className="phone-msgs" ref={box} aria-live="polite">
           {msgs.map((m, i) => <div key={i} className={`msg ${m.role === "user" ? "out" : "in"}`}>{m.content}{m.tag && <span className="tag">✓ {m.tag}</span>}</div>)}
           {busy && <div className="msg in"><Loader2 size={14} className="spin" /></div>}

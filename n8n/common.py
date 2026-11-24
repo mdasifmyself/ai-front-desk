@@ -1,20 +1,23 @@
-"""Shared helpers for the DEMO Dental n8n build.
+"""Shared helpers for the Front Desk n8n build (the independent copy).
 
-Secrets: the n8n URL/key come from ~/.config/renata-assessment (the same n8n server);
-everything new for this demo lives in ~/.config/crm-voice-demo. Nothing secret is printed.
-The original Leave Policy workflows are only ever READ (to copy), never changed.
+Settings live outside the project and are never printed:
+  ~/.config/asif-demos/            n8n_url (the API, reached through an SSH tunnel), n8n_api_key,
+                                   webhook_base (the public https address), openai_credential.json, elevenlabs_key
+  ~/.config/asif-demos/frontdesk/  ids.json, webhook_secret, original_answer_engine_backup.json, hubspot_token.txt (optional)
+The server is Asif's own (asif-demos-n8n). The original project and its server are never touched.
 """
 import json, pathlib, urllib.request, urllib.error, uuid
 
 ROOT = pathlib.Path(__file__).resolve().parent
-OLD = pathlib.Path.home() / ".config/renata-assessment"
-CFG = pathlib.Path.home() / ".config/crm-voice-demo"
-CFG.mkdir(mode=0o700, exist_ok=True)
-N8N_URL = (OLD / "n8n_url").read_text().strip()
-N8N_KEY = (OLD / "n8n_api_key").read_text().strip()
-OPENAI_CRED = {"id": "QkaebtX2OWefzo5s", "name": "OpenAI account"}
+SHARED = pathlib.Path.home() / ".config/asif-demos"
+CFG = SHARED / "frontdesk"
+CFG.mkdir(mode=0o700, parents=True, exist_ok=True)
+N8N_URL = (SHARED / "n8n_url").read_text().strip()
+N8N_KEY = (SHARED / "n8n_api_key").read_text().strip()
+HOOK_BASE = (SHARED / "webhook_base").read_text().strip()          # https://…/webhook
+OPENAI_CRED = json.loads((SHARED / "openai_credential.json").read_text())   # {"id": …, "name": …}
 MODEL = "gpt-6-luna"
-PREFIX = "DEMO Dental | "
+PREFIX = "Front Desk | "
 
 
 def api(method, path, body=None, ok404=False):

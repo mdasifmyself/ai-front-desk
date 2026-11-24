@@ -60,7 +60,7 @@ def main():
         lid = f"L-S{k + 1:04d}"
         t0 = now - timedelta(hours=ago)
         first = name.split()[0]
-        follow = f"Hi {first}, thanks for reaching out about {svc.lower()}. Would you like me to book a time for you? Ava, DEMO Dental Clinic"
+        follow = f"Hi {first}, thanks for reaching out about {svc.lower()}. Would you like me to book a time for you? Ava, Lakeview Dental Clinic"
         leads.append({"lead_id": lid, "created_at": iso(t0), "updated_at": iso(t0 + timedelta(minutes=6)), "name": name,
                       "phone": f"+1 555 01{random.randint(10, 99)} {random.randint(1000, 9999)}",
                       "email": f"{first.lower()}.sample@example.com", "service": svc, "message": msg,

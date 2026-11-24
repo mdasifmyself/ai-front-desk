@@ -33,7 +33,7 @@ export default function Overview({ snap, now, fresh, onTestLead, onCall, onOpenL
       <div className="top">
         <div>
           <h1>Today</h1>
-          <p className="sub">{dayLabel(new Date(now).toISOString())} · DEMO Dental Clinic</p>
+          <p className="sub">{dayLabel(new Date(now).toISOString())} · Lakeview Dental Clinic</p>
         </div>
         <span className="live"><i />Live · updates by itself</span>
       </div>
@@ -41,7 +41,7 @@ export default function Overview({ snap, now, fresh, onTestLead, onCall, onOpenL
       <div className="ov">
         <section className="hero" aria-labelledby="hero-h">
           <div>
-            <div className="hero-tags"><span><i />Live demo</span><span>Sample clinic</span></div>
+            <div className="hero-tags"><span><i />Live</span><span>Sample clinic</span></div>
             <h2 id="hero-h">Every enquiry answered. Every visit booked.</h2>
             <p className="hero-sub">Leads are scored, saved to the CRM and called back by AI, without anyone at the desk.</p>
           </div>

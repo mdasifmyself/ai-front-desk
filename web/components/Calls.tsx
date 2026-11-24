@@ -140,7 +140,7 @@ export default function Calls({ snap, now, target, setTarget, boost, reload }: {
               <span className="avatar">{lead ? initials(lead.name) : <PhoneCall size={22} />}</span>
             </div>
             <b style={{ fontSize: 18 }}>{who}</b>
-            <p className="muted">{target.direction === "outbound" ? <><PhoneOutgoing size={13} /> AI calls back · {lead?.service}</> : <><PhoneIncoming size={13} /> Inbound call to DEMO Dental</>}</p>
+            <p className="muted">{target.direction === "outbound" ? <><PhoneOutgoing size={13} /> AI calls back · {lead?.service}</> : <><PhoneIncoming size={13} /> Inbound call to Front Desk</>}</p>
             <p className="call-state" aria-live="polite">{state}</p>
             <div className="call-btns">
               {(phase === "idle" || phase === "done") && <button className="btn green lg" onClick={start}><PhoneCall size={18} /> {target.direction === "outbound" ? "Take the AI’s call" : "Start the call"}</button>}

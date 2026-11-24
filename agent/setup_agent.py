@@ -4,16 +4,16 @@
 
 Tools are webhooks into n8n workflow 02 (/webhook/demo-dental/tool?name=<tool>), authenticated with the
 demo header key. Dynamic variables (lead id, caller name, today's calendar) are sent by the website when
-a call starts. IDs are saved to ~/.config/crm-voice-demo/ids.json; secrets are never printed.
+a call starts. IDs are saved to ~/.config/asif-demos/frontdesk/ids.json; secrets are never printed.
 """
 import json, pathlib, sys, urllib.request, urllib.error
 
 ROOT = pathlib.Path(__file__).resolve().parent
 PROJ = ROOT.parent
-CFG = pathlib.Path.home() / ".config/crm-voice-demo"
-OLD = pathlib.Path.home() / ".config/renata-assessment"
-XI = (OLD / "elevenlabs_key").read_text().strip()
-N8N = (OLD / "n8n_url").read_text().strip()
+SHARED = pathlib.Path.home() / ".config/asif-demos"
+CFG = SHARED / "frontdesk"
+XI = (SHARED / "elevenlabs_key").read_text().strip()
+HOOK_BASE = (SHARED / "webhook_base").read_text().strip()   # the public https address, ends in /webhook
 KEY = (CFG / "webhook_secret").read_text().strip()
 CLINIC = json.loads((PROJ / "clinic.json").read_text())
 IDS = json.loads((CFG / "ids.json").read_text())
@@ -65,7 +65,7 @@ def tool_config(name):
     desc, props, req = TOOLS[name]
     props = dict(props, lead_id=LEAD, channel={"type": "string", "description": "", "constant_value": "voice"})
     return {"type": "webhook", "name": name, "description": desc, "response_timeout_secs": 20,
-            "api_schema": {"url": f"{N8N}/webhook/demo-dental/tool?name={name}", "method": "POST",
+            "api_schema": {"url": f"{HOOK_BASE}/demo-dental/tool?name={name}", "method": "POST",
                            "request_headers": {"X-Demo-Key": KEY},
                            "request_body_schema": {"type": "object", "description": f"Arguments for {name}",
                                                    "properties": props, "required": req}}}
@@ -140,7 +140,7 @@ def main():
     platform = {"auth": {"enable_auth": True},
                 "call_limits": {"agent_concurrency_limit": 3, "daily_limit": 30},
                 "overrides": {"conversation_config_override": {"conversation": {"text_only": True}}}}
-    body = {"name": "DEMO Dental · AI receptionist", "conversation_config": conv, "platform_settings": platform, "tags": ["demo"]}
+    body = {"name": "Front Desk · AI receptionist", "conversation_config": conv, "platform_settings": platform, "tags": ["demo"]}
     if IDS.get("el_agent"):
         el("PATCH", f"/v1/convai/agents/{IDS['el_agent']}", body)
         print("updated agent")
