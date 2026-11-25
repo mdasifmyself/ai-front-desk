@@ -47,6 +47,14 @@ The browser never talks to n8n or ElevenLabs directly. Every call goes through t
 `05` Comment filter · `06` CRM retry queue · `07` Console API · `08` Error alerts · `10` Save lead (helper) ·
 `11` CRM sync (helper)
 
+### Cost and failure guards
+
+- Each AI workflow has a daily ceiling (lead scoring 100, after-call notes 50, chat 200, comments 50). Over it, the
+  workflow takes its "AI unavailable" path: rules score the lead, the chat asks the patient to try again later.
+- A crashed run is written to the console's activity log. With an alerts workflow set (`alerts_workflow.json`), a
+  crash, an OpenAI error or a reached ceiling also sends the team a short message: workflow, failed step and error
+  line, never keys or patient details.
+
 ## Run it yourself
 
 You need an n8n server (2.x, with the public API on), an OpenAI key saved as an n8n credential, and an ElevenLabs account.

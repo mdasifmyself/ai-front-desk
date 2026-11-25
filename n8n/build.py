@@ -8,13 +8,19 @@ Rules:
 - All secrets live in ~/.config/asif-demos (never printed, never in the web code).
 """
 import json, pathlib, secrets, uuid
-from common import api, ids, save_ids, CFG, OPENAI_CRED, MODEL, REASONING, PREFIX, ROOT
+from common import api, ids, save_ids, CFG, SHARED, OPENAI_CRED, MODEL, REASONING, PREFIX, ROOT
 
 PROJ = ROOT.parent
 CLINIC = json.loads((PROJ / "clinic.json").read_text())
 I = ids()
 HUBSPOT_TOKEN = (CFG / "hubspot_token.txt").read_text().strip() if (CFG / "hubspot_token.txt").exists() else ""
 HUBSPOT = bool(HUBSPOT_TOKEN)
+# Optional: the id of a separate alerts workflow (it sends the team a Telegram message). Without it, alerts only
+# show on the console's Automations screen.
+_alerts = SHARED / "alerts_workflow.json"
+ALERTS = json.loads(_alerts.read_text())["id"] if _alerts.exists() else None
+# The most AI requests each workflow may make in a day. Over it, the workflow takes its "AI unavailable" path.
+AI_DAILY_LIMIT = {"wf_lead": 100, "wf_after_call": 50, "wf_chat": 200, "wf_comments": 50}
 
 LEAD_COLS = ["lead_id", "created_at", "updated_at", "name", "phone", "email", "service", "message",
              "preferred_time", "source", "stage", "score", "temperature", "intent", "urgency", "summary",
@@ -131,6 +137,58 @@ def openai(name, pos):
                  "sendBody": True, "specifyBody": "json", "jsonBody": "={{ JSON.stringify($json.body) }}",
                  "options": {"timeout": 45000}}, pos, tv=4.2, credentials={"openAiApi": OPENAI_CRED},
                 onError="continueErrorOutput", retryOnFail=True, maxTries=2, waitBetweenTries=1000)
+
+
+def tell_team(name, pos):
+    """Hands a short notice to the alerts workflow without waiting for it."""
+    return node(name, "n8n-nodes-base.executeWorkflow",
+                {"workflowId": {"__rl": True, "value": ALERTS, "mode": "id"},
+                 "workflowInputs": {"mappingMode": "defineBelow", "value": {}, "matchingColumns": [], "schema": [],
+                                    "attemptToConvertTypes": False, "convertFieldsToString": True},
+                 "mode": "once", "options": {"waitForSubWorkflow": False}}, pos, tv=1.2, onError="continueRegularOutput")
+
+
+LIMIT_JS = r"""
+// A daily ceiling on AI requests for this workflow, so a public test space cannot run up a bill.
+// Over the ceiling the run takes the same path as "AI unavailable". The count starts again at midnight, clinic time.
+const LIMIT = __LIMIT__;
+const s = $getWorkflowStaticData('global');
+const today = DateTime.now().setZone(__TZ__).toISODate();
+if (s.day !== today) { s.day = today; s.used = 0; s.told = false; }
+const ai_ok = s.used < LIMIT;
+if (ai_ok) s.used += 1;
+const tell = !ai_ok && !s.told;
+if (tell) s.told = true;
+return $input.all().map(i => ({ json: { ...i.json, ai_ok, ai_limit_tell: tell } }));
+"""
+
+NO_AI_JS = r"""
+// Why did this run go without AI? Tell the team once: the ceiling was reached, or OpenAI returned an error.
+// Only the reason is sent on. No lead, caller or message text.
+const j = $input.first().json;
+const source = 'AI Front Desk · __NAME__';
+if (j.error) return [{ json: { source, title: 'AI request failed, the fallback answered', detail: String(j.error.message || j.error).slice(0, 200) } }];
+if (j.ai_limit_tell) return [{ json: { source, title: 'Daily AI limit reached', detail: '__LIMIT__ AI requests used today. Until midnight this workflow answers without AI.' } }];
+return [];
+"""
+
+
+def ai_limit(n, c, key, name, prev, fallback, pos):
+    """Puts the daily ceiling between `prev` and "Ask OpenAI"; over it the run goes to `fallback`.
+    With an alerts workflow set, the team is told when the ceiling is reached or OpenAI fails."""
+    x, y = pos
+    limit = str(AI_DAILY_LIMIT[key])
+    n += [code("Daily AI limit", LIMIT_JS.replace("__LIMIT__", limit).replace("__TZ__", json.dumps(CLINIC["timezone"])), (x, y)),
+          if_true("Under the limit?", "={{ $json.ai_ok }}", (x + 240, y))]
+    chain(c, prev, "Daily AI limit", "Under the limit?")
+    link(c, "Under the limit?", "Ask OpenAI", 0)
+    link(c, "Under the limit?", fallback, 1)
+    if ALERTS:
+        n += [code("Why no AI?", NO_AI_JS.replace("__LIMIT__", limit).replace("__NAME__", name), (x + 480, y + 200)),
+              tell_team("Tell the team", (x + 720, y + 200))]
+        link(c, "Under the limit?", "Why no AI?", 1)
+        link(c, "Ask OpenAI", "Why no AI?", 1)
+        link(c, "Why no AI?", "Tell the team")
 
 
 def trigger_sub(pos):
@@ -263,9 +321,17 @@ return [{ json: { lead_id: '', at: new Date().toISOString(), kind: 'error',
 """), (240, 0)),
          dt_insert("Log alert", "activity", (480, 0)),
          note("## Error alerts\nAny Front Desk workflow that crashes lands here. The error is written to the activity log, "
-              "so it shows on the console's Automations screen. In production this also sends a Telegram/Slack alert.", (0, -260), 520, 200)]
+              "so it shows on the console's Automations screen. If an alerts workflow is set, the team also gets a "
+              "short message (workflow, failed step, error line; never keys or patient details).", (0, -260), 520, 200)]
     c = {}
     chain(c, "Error Trigger", "Write alert", "Log alert")
+    if ALERTS:
+        n += [code("Notice", r"""
+const e = $('Error Trigger').first().json, a = $('Write alert').first().json;
+const step = e.execution && e.execution.lastNodeExecuted;
+return [{ json: { source: 'AI Front Desk', title: a.title, detail: (step ? `Step: ${step}. ` : '') + a.detail } }];
+""", (720, 0)), tell_team("Tell the team", (960, 0))]
+        chain(c, "Log alert", "Notice", "Tell the team")
     deploy("wf_errors", "08 Error Alerts", n, c)   # n8n 2.x: an error workflow must be published before others can select it
 
 
@@ -477,7 +543,8 @@ return [{ json: { lead: out, acts } }];
     chain(c, "Webhook", "Check form", "Form OK?")
     link(c, "Form OK?", "Lead row", 0)
     link(c, "Form OK?", "Reply: fix form", 1)
-    chain(c, "Lead row", "Save first", "Received", "Log received", "Reply: saved", "Build AI request", "Ask OpenAI")
+    chain(c, "Lead row", "Save first", "Received", "Log received", "Reply: saved", "Build AI request")
+    ai_limit(n, c, "wf_lead", "01 Lead intake", "Build AI request", "Rule-based fallback", (1920, 120))
     link(c, "Ask OpenAI", "Read AI result", 0)
     link(c, "Ask OpenAI", "Rule-based fallback", 1)
     link(c, "Read AI result", "Lead for CRM", 0)
@@ -680,7 +747,8 @@ return [{ json: { lead_id: p.lead_id, crm_status: r.ok ? 'synced' : 'queued', cr
               "The outcome is cross-checked with the bookings table, so a \"booked\" call really has a booking. "
               "Then: call log, lead stage, CRM sync, activity log.", (0, -360), 960, 220)]
     c = {}
-    chain(c, "Webhook", "Get lead", "Get appointments", "Build AI request", "Ask OpenAI")
+    chain(c, "Webhook", "Get lead", "Get appointments", "Build AI request")
+    ai_limit(n, c, "wf_after_call", "03 After-call notes", "Build AI request", "Apply", (720, 420))
     link(c, "Ask OpenAI", "Apply", 0)
     link(c, "Ask OpenAI", "Apply", 1)
     for a, b in [("Apply", "Call row"), ("Call row", "Save call"), ("Apply", "Lead patch"), ("Lead patch", "Save lead"),
@@ -765,7 +833,8 @@ return [{ json: { body } }];
     chain(c, "Webhook", "Check input", "Input OK?")
     link(c, "Input OK?", "Get appointments", 0)
     link(c, "Input OK?", "Reply: bad input", 1)
-    chain(c, "Get appointments", "Get leads", "Build request", "Ask OpenAI")
+    chain(c, "Get appointments", "Get leads", "Build request")
+    ai_limit(n, c, "wf_chat", "04 Patient chat", "Build request", "Run action", (1200, 320))
     link(c, "Ask OpenAI", "Run action", 0)
     link(c, "Ask OpenAI", "Run action", 1)
     tool_writes(n, c, "Run action", 1920, -100)
@@ -855,7 +924,8 @@ return [{ json: r ? { ok: true, results: r.results } : { ok: false, error: 'AI b
          note("## 05 · Comment filter\nLabels each comment (enquiry, booking request, complaint, praise, spam, off-topic) and drafts a public reply "
               "only where one is useful. In production the input is the Facebook/Instagram Graph API webhook.", (0, -300), 760, 200)]
     c = {}
-    chain(c, "Webhook", "Build request", "Ask OpenAI")
+    chain(c, "Webhook", "Build request")
+    ai_limit(n, c, "wf_comments", "05 Comment filter", "Build request", "Read result", (240, 220))
     link(c, "Ask OpenAI", "Read result", 0)
     link(c, "Ask OpenAI", "Read result", 1)
     chain(c, "Read result", "Reply")
