@@ -16,7 +16,9 @@ N8N_URL = (SHARED / "n8n_url").read_text().strip()
 N8N_KEY = (SHARED / "n8n_api_key").read_text().strip()
 HOOK_BASE = (SHARED / "webhook_base").read_text().strip()          # https://…/webhook
 OPENAI_CRED = json.loads((SHARED / "openai_credential.json").read_text())   # {"id": …, "name": …}
-MODEL = "gpt-6-luna"
+MODEL = "gpt-4.1-mini"
+# Only reasoning models (gpt-5 and later, o-series) accept the "reasoning" setting; others reject it.
+REASONING = MODEL.startswith(("gpt-5", "gpt-6", "o1", "o3", "o4"))
 PREFIX = "Front Desk | "
 
 

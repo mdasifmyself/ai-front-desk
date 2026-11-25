@@ -8,7 +8,7 @@ Rules:
 - All secrets live in ~/.config/asif-demos (never printed, never in the web code).
 """
 import json, pathlib, secrets, uuid
-from common import api, ids, save_ids, CFG, OPENAI_CRED, MODEL, PREFIX, ROOT
+from common import api, ids, save_ids, CFG, OPENAI_CRED, MODEL, REASONING, PREFIX, ROOT
 
 PROJ = ROOT.parent
 CLINIC = json.loads((PROJ / "clinic.json").read_text())
@@ -219,6 +219,8 @@ function outText(r) {
 
 
 def js(src):
+    if not REASONING:
+        src = src.replace(" reasoning: { effort: 'low' },", "")
     return src.replace("__CLINIC_JS__", CLINIC_JS).replace("__CLINIC__", json.dumps(CLINIC)) \
         .replace("__MODEL__", json.dumps(MODEL)).replace("__LEAD_COLS__", json.dumps(LEAD_COLS)) \
         .replace("__HUBSPOT__", "true" if HUBSPOT else "false")
